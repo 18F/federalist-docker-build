@@ -17,6 +17,7 @@ from runner import run
 HUGO_BIN = 'hugo'
 HUGO_VERSION = '.hugo-version'
 NVMRC = '.nvmrc'
+YARN_LOCKFILE = 'yarn.lock'
 PACKAGE_JSON = 'package.json'
 RUBY_VERSION = '.ruby-version'
 GEMFILE = 'Gemfile'
@@ -127,12 +128,17 @@ def setup_node():
             runp('nvm alias default $(nvm version)')
             runp('echo Node version: $(node --version)')
             runp('echo NPM version: $(npm --version)')
+            runp('echo Yarn version: $(yarn --version)')
 
         PACKAGE_JSON_PATH = CLONE_DIR_PATH / PACKAGE_JSON
         if PACKAGE_JSON_PATH.is_file():
             logger.info('Installing production dependencies in package.json')
-            runp('npm set audit false')
-            runp('npm ci --production')
+            YARN_LOCKFILE_PATH = CLONE_DIR_PATH / YARN_LOCKFILE
+            if YARN_LOCKFILE_PATH.is_file():
+                runp('yarn install --production --frozen-lockfile')
+            else:
+                runp('npm set audit false')
+                runp('npm ci --production')
 
     except (CalledProcessError, OSError, ValueError):
         return 1
